@@ -138,7 +138,7 @@ body::after {
 }
 .modal { position: relative; width: min(680px, 100%); max-height: 90vh; overflow: auto; }
 .modal-head { justify-content: space-between; align-items: center; position: relative; padding-right: 42px; min-height: 30px; }
-.modal-close-btn { position: absolute; top: 0; right: 0; padding: 6px 10px; min-width: 0; width: auto; border-radius: 999px; z-index: 2; }
+.modal-close-btn { position: absolute; top: 0; right: 0; left: auto; padding: 6px 10px; min-width: 0; width: auto; border-radius: 999px; z-index: 2; }
 .modal-footer-row { justify-content: flex-end; }
 .modal-category-row { gap: 10px; }
 .minor-suit-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }

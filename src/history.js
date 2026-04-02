@@ -9,6 +9,7 @@ let isComposing = false
 let shouldRefocusSearch = false
 let searchSelectionStart = null
 let searchSelectionEnd = null
+let isLocalSectionExpanded = false
 const expandedRemoteIds = new Set()
 const expandedLocalIds = new Set()
 
