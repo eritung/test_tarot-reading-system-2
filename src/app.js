@@ -134,9 +134,9 @@ function openUsageModal() {
   wrapper.className = 'modal-backdrop'
   wrapper.innerHTML = `
     <div class="panel panel-gold modal help-modal">
+      <button class="button btn-ghost modal-close-btn" data-close aria-label="關閉">✕</button>
       <div class="row modal-head">
         <h3 class="section-title">✦ 使用說明</h3>
-        <button class="button btn-ghost modal-close-btn" data-close aria-label="關閉">✕</button>
       </div>
       <div class="divider"></div>
       <div class="help-content">
@@ -179,9 +179,9 @@ function openModal(editCard = null) {
     const cards = pool.filter((card) => card === editCard?.cardName || !usedCards.includes(card))
     wrapper.innerHTML = `
       <div class="panel panel-gold modal">
+        <button class="button btn-ghost modal-close-btn" data-close aria-label="關閉">✕</button>
         <div class="row modal-head">
           <h3 class="section-title">✦ ${editCard ? '編輯牌卡' : '選擇塔羅牌'}</h3>
-          <button class="button btn-ghost modal-close-btn" data-close aria-label="關閉">✕</button>
         </div>
         <div class="divider"></div>
         <div style="display:grid; gap:16px;">
