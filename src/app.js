@@ -357,9 +357,7 @@ async function requestAggregateSummary() {
         return `【第 ${idx + 1} 筆獨立解讀｜${cardNames}】
 ${item.aiResult || '尚未取得內容'}`
       })
-      .join('
-
-')
+      .join('\n\n')
 
     const summaryInstruction = `請忽略一般招呼與問候語。你是一位專業塔羅解牌師助手，請根據以下資訊提供解牌結果。只需要提供給使用者最精確且方便轉述給問事者的回覆即可，請用繁體中文回答，語氣溫和、清楚、具體。內容需包含：【✦抽到的牌是✦】、【✦整體分析✦】、【✦綜合建議✦】。
 
