@@ -563,6 +563,7 @@ function bindInputs() {
   app.querySelector('#startBtn')?.addEventListener('click', startSession)
   app.querySelector('#saveBtn')?.addEventListener('click', saveSession)
   app.querySelector('#generateBtn')?.addEventListener('click', () => generateAI())
+  app.querySelector('#summaryBtn')?.addEventListener('click', requestAggregateSummary)
   app.querySelector('#nextBtn')?.addEventListener('click', nextCustomer)
   app.querySelector('#addCardBtn')?.addEventListener('click', () => openModal())
   app.querySelector('#helpBtn')?.addEventListener('click', openUsageModal)
