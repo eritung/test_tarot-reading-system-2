@@ -154,9 +154,9 @@ body::after {
 .kv { display:grid; grid-template-columns: 120px 1fr; gap: 6px 12px; font-size: 14px; }
 .error-text { color: var(--danger); }
 .history-search-section { margin-bottom:20px; }
-.history-tools-grid { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.history-tools-grid { display: block; }
 .history-search-wrap { flex: 1; min-width: 0; }
-.history-tools-actions { display: flex; flex-direction: row; align-items: stretch; justify-content: flex-end; }
+.history-tools-actions { display: flex; justify-content: flex-end; align-items: center; }
 .back-home-btn { margin-bottom: 14px; align-self: flex-start; }
 .history-tools-panel { display: flex; flex-direction: column; }
 .brand-center-mobile, .center-mobile-buttons { width: auto; }
@@ -228,53 +228,33 @@ body::after {
 #aggregate-summary .section-title { margin-bottom: 6px; }
 
 
-/* history search tools alignment */
-.history-tools-grid{
+
+
+
+
+
+
+.history-search-row{
   display:grid;
-  grid-template-columns: minmax(0,1fr) auto;
-  gap:24px;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:16px;
   align-items:center;
 }
-.history-search-wrap{
-  min-width:0;
-}
-.history-search-wrap .input{
+.history-search-row .input{
   width:100%;
 }
-.history-clear-wrap{
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-  height:100%;
+.history-tools-actions .button{
+  white-space:nowrap;
 }
-.history-clear-wrap .button{
-  align-self:center;
-}
-
 @media (max-width: 900px){
-  .history-tools-grid{
-    grid-template-columns: 1fr;
-    gap:16px;
-    align-items:stretch;
+  .history-search-row{
+    grid-template-columns:1fr;
+    gap:12px;
   }
-  .history-clear-wrap{
+  .history-tools-actions{
     justify-content:stretch;
-    align-items:stretch;
   }
-  .history-clear-wrap .button{
+  .history-tools-actions .button{
     width:100%;
-  }
-}
-
-
-/* history search center align fix */
-@media (min-width: 901px){
-  .history-tools-grid{
-    align-items:start !important;
-  }
-  .history-clear-wrap{
-    height:auto !important;
-    padding-top: 82px;
-    align-items:flex-start !important;
   }
 }

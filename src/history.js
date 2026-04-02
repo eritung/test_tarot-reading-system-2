@@ -147,11 +147,13 @@ function renderSearchBar() {
           <h2 class="section-title">✦ 搜尋紀錄</h2>
           <div class="divider"></div>
           <label class="label">關鍵字篩選</label>
-          <input class="input" id="keywordSearch" placeholder="可搜尋客戶姓名、問題內容、牌名、解牌文字、建立時間..." value="${escapeHtml(keyword)}">
+          <div class="history-search-row">
+            <input class="input" id="keywordSearch" placeholder="可搜尋客戶姓名、問題內容、牌名、解牌文字、建立時間..." value="${escapeHtml(keyword)}">
+            <div class="history-tools-actions">
+              <button class="button btn-danger" id="clearAllBtn" ${state.history.length ? '' : 'disabled'}>清空本機資料</button>
+            </div>
+          </div>
           <div class="helper" style="margin-top:8px;">目前會同時篩選雲端紀錄與本機備份紀錄，也可搜尋建立／更新時間。</div>
-        </div>
-        <div class="history-tools-actions">
-          <button class="button btn-danger" id="clearAllBtn" ${state.history.length ? '' : 'disabled'}>清空本機資料</button>
         </div>
       </div>
     </section>
