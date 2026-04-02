@@ -233,7 +233,7 @@ body::after {
   display:grid;
   grid-template-columns: minmax(0,1fr) auto;
   gap:24px;
-  align-items:end;
+  align-items:center;
 }
 .history-search-wrap{
   min-width:0;
@@ -243,10 +243,14 @@ body::after {
 }
 .history-clear-wrap{
   display:flex;
-  align-items:end;
+  align-items:center;
   justify-content:flex-end;
   height:100%;
 }
+.history-clear-wrap .button{
+  align-self:center;
+}
+
 @media (max-width: 900px){
   .history-tools-grid{
     grid-template-columns: 1fr;
@@ -255,6 +259,7 @@ body::after {
   }
   .history-clear-wrap{
     justify-content:stretch;
+    align-items:stretch;
   }
   .history-clear-wrap .button{
     width:100%;
