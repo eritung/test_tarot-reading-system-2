@@ -222,3 +222,7 @@ body::after {
 
 .history-record-list-standalone { margin-top: 14px; }
 .history-record .result-toggle-block { margin-top: 10px; }
+
+
+#summaryBtn { min-width: 210px; }
+#aggregate-summary .section-title { margin-bottom: 6px; }

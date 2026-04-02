@@ -11,7 +11,9 @@ export function createEmptySession() {
     aiResult: '',
     drawnCards: [],
     generatedReadings: [],
+    aggregateSummary: null,
     isStarted: false,
+    isSummarizing: false,
   }
 }
 
