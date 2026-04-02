@@ -265,3 +265,16 @@ body::after {
     width:100%;
   }
 }
+
+
+/* history search center align fix */
+@media (min-width: 901px){
+  .history-tools-grid{
+    align-items:start !important;
+  }
+  .history-clear-wrap{
+    height:auto !important;
+    padding-top: 82px;
+    align-items:flex-start !important;
+  }
+}
