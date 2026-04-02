@@ -88,8 +88,9 @@ function buildRemoteGroups(rows = []) {
     }
 
     ;(row.cards || []).forEach((card = {}) => {
-      const label = `${card.name || ''}${card.reversed ? '（逆位）' : ''}`
-      if (label.trim()) group.allCards.set(label, label)
+      const normalized = normalizeCard(card)
+      const label = `${normalized.name || ''}${normalized.reversed ? '（逆位）' : ''}`
+      if (label.trim()) group.allCards.set(label, normalized)
     })
 
     if (!group.created_at || new Date(row.created_at) < new Date(group.created_at)) group.created_at = row.created_at
@@ -200,9 +201,9 @@ function render() {
                 <button class="button btn-danger history-delete-btn" data-delete-remote="${item.id}">刪除</button>
                 <div class="kv" style="margin-top:12px;">
                   <div class="helper">紀錄筆數</div><div>${item.readings?.length || 0} 筆</div>
-                  <div class="helper">所有牌張</div><div>${escapeHtml((item.cards || []).map((c) => `${c.name}${c.reversed ? '（逆位）' : ''}`).join('、') || '—')}</div>
+                  <div class="helper">所有牌張</div><div>${escapeHtml((item.cards || []).map((c) => typeof c === 'string' ? c : `${c.name}${c.reversed ? '（逆位）' : ''}`).join('、') || '—')}</div>
                 </div>
-                ${renderResultToggle((item.readings || []).map((reading, idx) => `<div class="history-record"><div class="history-record-meta"><div><strong>第 ${idx + 1} 筆</strong>　<span class="helper">${formatDate(reading.updated_at || reading.created_at)}</span></div><div><span class="helper">問題類型</span>：${escapeHtml(reading.question_type || '—')}</div><div><span class="helper">紀錄類型</span>：${escapeHtml(reading.spread_type || '一般解牌')}</div><div><span class="helper">提問內容</span>：${escapeHtml(reading.question || '—')}</div><div><span class="helper">抽到的牌</span>：${escapeHtml((reading.cards || []).map((c) => `${c.name}${c.reversed ? '（逆位）' : ''}`).join('、') || '—')}</div><div>${escapeHtml(reading.ai_result || '尚未生成').replace(/\n/g, '<br>')}</div></div></div>`).join(''), expanded, 'remote', item.id)}
+                ${renderResultToggle((item.readings || []).map((reading, idx) => `<div class="history-record"><div class="history-record-meta"><div><strong>第 ${idx + 1} 筆</strong>　<span class="helper">${formatDate(reading.updated_at || reading.created_at)}</span></div><div><span class="helper">問題類型</span>：${escapeHtml(reading.question_type || '—')}</div><div><span class="helper">紀錄類型</span>：${escapeHtml(reading.spread_type || '一般解牌')}</div><div><span class="helper">提問內容</span>：${escapeHtml(reading.question || '—')}</div><div><span class="helper">抽到的牌</span>：${escapeHtml((reading.cards || []).map((c) => typeof c === 'string' ? c : `${c.name}${c.reversed ? '（逆位）' : ''}`).join('、') || '—')}</div><div>${escapeHtml(reading.ai_result || '尚未生成').replace(/\n/g, '<br>')}</div></div></div>`).join(''), expanded, 'remote', item.id)}
               </article>`
             }).join('')}
           </div>`}
