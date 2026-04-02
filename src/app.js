@@ -282,11 +282,23 @@ async function insertReadingToSupabase(payload, aiResult) {
   return data?.id || ''
 }
 
-async function updateReadingInSupabase(readingId, aiResult) {
+async function updateReadingInSupabase(readingId, aiResult, payload = null) {
   if (!readingId) return ''
+  const updatePayload = payload
+    ? {
+        client_name: payload.client_name,
+        question: payload.question,
+        question_type: payload.question_type,
+        spread_type: payload.spread_type || '自訂牌陣',
+        cards: payload.cards,
+        include_reversed: Boolean(payload.include_reversed),
+        ai_result: aiResult,
+      }
+    : { ai_result: aiResult }
+
   const { data, error } = await supabase
     .from('readings')
-    .update({ ai_result: aiResult })
+    .update(updatePayload)
     .eq('id', readingId)
     .select('id')
     .single()
@@ -329,7 +341,7 @@ async function requestSingleReading(payload, targetResultId = null) {
 
   const existing = targetResultId ? state.current.generatedReadings.find((item) => item.id === targetResultId) : null
   if (!readingId && existing?.readingId) {
-    readingId = await updateReadingInSupabase(existing.readingId, aiResult)
+    readingId = await updateReadingInSupabase(existing.readingId, aiResult, payload)
   } else if (!readingId) {
     readingId = await insertReadingToSupabase(payload, aiResult)
   }
@@ -382,10 +394,26 @@ ${individualReadingsText}`
       throw new Error(data?.error?.message || data?.error || '統整解讀失敗')
     }
 
+    const summaryResult = data.result || '沒有取得統整結果'
+    const summaryPayload = {
+      ...payload,
+      spread_type: '整體統整',
+      question_type: payload.question_type ? `${payload.question_type}｜整體統整` : '整體統整',
+    }
+
+    const existingSummaryId = state.current.aggregateSummary?.readingId || ''
+    const summaryReadingId = existingSummaryId
+      ? await updateReadingInSupabase(existingSummaryId, summaryResult, summaryPayload)
+      : await insertReadingToSupabase(summaryPayload, summaryResult)
+
     state.current.aggregateSummary = {
-      id: uid('summary'),
-      result: data.result || '沒有取得統整結果',
-      createdAt: new Date().toISOString(),
+      id: state.current.aggregateSummary?.id || uid('summary'),
+      readingId: summaryReadingId,
+      result: summaryResult,
+      createdAt: state.current.aggregateSummary?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      questionType: summaryPayload.question_type,
+      questionContent: payload.question,
       cardsSnapshot: structuredClone(payload.cards),
     }
     persistCurrent()
@@ -604,7 +632,7 @@ function renderAggregateSummary() {
       <div class="row result-card-head">
         <div>
           <h2 class="section-title">✦ 綜合統整</h2>
-          <div class="card-meta">${new Date(summary.createdAt || Date.now()).toLocaleString('zh-TW', { hour12: false })}</div>
+          <div class="card-meta">${new Date(summary.updatedAt || summary.createdAt || Date.now()).toLocaleString('zh-TW', { hour12: false })}</div>
           <div class="result-card-summary tarot-card-title">${cardNames}</div>
         </div>
       </div>
