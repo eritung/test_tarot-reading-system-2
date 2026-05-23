@@ -330,7 +330,6 @@ async function readAIResponse(response, onChunk = null) {
 
   const contentType = response.headers.get('content-type') || ''
 
-  // 相容舊版 Edge Function：回傳 JSON { ok, result }
   if (contentType.includes('application/json')) {
     const data = await response.json()
     if (!data.ok) {
@@ -341,7 +340,6 @@ async function readAIResponse(response, onChunk = null) {
     return result
   }
 
-  // 新版 Edge Function：回傳 text/plain stream，邊生成邊顯示
   let aiResult = ''
 
   if (response.body) {
@@ -514,19 +512,20 @@ async function generateAI(options = {}) {
       })
       render()
 
-const { aiResult, readingId } = await requestSingleReading(payload, targetResultId, (partialText) => {
-  upsertGeneratedResult({
-    ...existing,
-    aiResult: partialText,
-    payloadSnapshot: structuredClone(payload),
-    updatedAt: new Date().toISOString(),
-    isExpanded: true,
-    isLoading: true,
-    errorMessage: '',
-  })
-  render()
-})
-  upsertGeneratedResult({
+      const { aiResult, readingId } = await requestSingleReading(payload, targetResultId, (partialText) => {
+        upsertGeneratedResult({
+          ...existing,
+          aiResult: partialText,
+          payloadSnapshot: structuredClone(payload),
+          updatedAt: new Date().toISOString(),
+          isExpanded: true,
+          isLoading: true,
+          errorMessage: '',
+        })
+        render()
+      })
+
+      upsertGeneratedResult({
         ...existing,
         readingId,
         aiResult,
@@ -561,7 +560,6 @@ const { aiResult, readingId } = await requestSingleReading(payload, targetResult
         return sourceId ? !existingGeneratedSourceIds.has(sourceId) : true
       })
 
-    // 若這次沒有新增牌，代表使用者可能是更新題目或其他欄位後想直接重算目前這批牌
     if (!cardPayloads.length) {
       cardPayloads = payload.cards.map((card) => ({
         ...payload,
@@ -588,16 +586,17 @@ const { aiResult, readingId } = await requestSingleReading(payload, targetResult
 
     for (const loadingItem of loadingItems) {
       try {
-      const { aiResult, readingId } = await requestSingleReading(loadingItem.payloadSnapshot, null, (partialText) => {
-        upsertGeneratedResult({
-          ...loadingItem,
-          aiResult: partialText,
-          updatedAt: new Date().toISOString(),
-          isLoading: true,
-          errorMessage: '',
+        const { aiResult, readingId } = await requestSingleReading(loadingItem.payloadSnapshot, null, (partialText) => {
+          upsertGeneratedResult({
+            ...loadingItem,
+            aiResult: partialText,
+            updatedAt: new Date().toISOString(),
+            isLoading: true,
+            errorMessage: '',
+          })
+          render()
         })
-        render()
-      })        
+
         upsertGeneratedResult({
           ...loadingItem,
           readingId,
@@ -699,7 +698,6 @@ function renderHeaderOnly() {
   if (!meta) return
   meta.textContent = state.current.customerName ? `目前諮詢：${state.current.customerName}` : ''
 }
-
 
 function renderAggregateSummary() {
   if (!state.current.aggregateSummary?.result) return ''
