@@ -322,7 +322,7 @@ function refreshGeneratedReadingTitles() {
   }))
 }
 
-async function requestSingleReading(payload, targetResultId = null) {
+async function requestSingleReading(payload, targetResultId = null, onChunk = null) {
   const response = await fetch(FUNCTION_URL, {
     method: 'POST',
     headers: {
@@ -330,6 +330,52 @@ async function requestSingleReading(payload, targetResultId = null) {
     },
     body: JSON.stringify({ ...payload, regenerate_reading_id: targetResultId || undefined }),
   })
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '')
+    throw new Error(errorText || 'AI 解牌失敗')
+  }
+
+  let aiResult = ''
+
+  if (response.body) {
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder('utf-8')
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      const chunk = decoder.decode(value, { stream: true })
+      aiResult += chunk
+
+      if (typeof onChunk === 'function') {
+        onChunk(aiResult)
+      }
+    }
+  } else {
+    aiResult = await response.text()
+    if (typeof onChunk === 'function') {
+      onChunk(aiResult)
+    }
+  }
+
+  aiResult = aiResult.trim() || '沒有取得解牌結果'
+
+  let readingId = ''
+
+  const existing = targetResultId
+    ? state.current.generatedReadings.find((item) => item.id === targetResultId)
+    : null
+
+  if (existing?.readingId) {
+    readingId = await updateReadingInSupabase(existing.readingId, aiResult, payload)
+  } else {
+    readingId = await insertReadingToSupabase(payload, aiResult)
+  }
+
+  return { aiResult, readingId }
+}
 
   const data = await response.json()
   if (!response.ok || !data.ok) {
@@ -456,8 +502,19 @@ async function generateAI(options = {}) {
       })
       render()
 
-      const { aiResult, readingId } = await requestSingleReading(payload, targetResultId)
-      upsertGeneratedResult({
+const { aiResult, readingId } = await requestSingleReading(payload, targetResultId, (partialText) => {
+  upsertGeneratedResult({
+    ...existing,
+    aiResult: partialText,
+    payloadSnapshot: structuredClone(payload),
+    updatedAt: new Date().toISOString(),
+    isExpanded: true,
+    isLoading: true,
+    errorMessage: '',
+  })
+  render()
+})
+  upsertGeneratedResult({
         ...existing,
         readingId,
         aiResult,
@@ -519,7 +576,16 @@ async function generateAI(options = {}) {
 
     for (const loadingItem of loadingItems) {
       try {
-        const { aiResult, readingId } = await requestSingleReading(loadingItem.payloadSnapshot)
+      const { aiResult, readingId } = await requestSingleReading(loadingItem.payloadSnapshot, null, (partialText) => {
+        upsertGeneratedResult({
+          ...loadingItem,
+          aiResult: partialText,
+          updatedAt: new Date().toISOString(),
+          isLoading: true,
+          errorMessage: '',
+        })
+        render()
+      })        
         upsertGeneratedResult({
           ...loadingItem,
           readingId,
