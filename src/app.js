@@ -322,20 +322,26 @@ function refreshGeneratedReadingTitles() {
   }))
 }
 
-async function requestSingleReading(payload, targetResultId = null, onChunk = null) {
-  const response = await fetch(FUNCTION_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ ...payload, regenerate_reading_id: targetResultId || undefined }),
-  })
-
+async function readAIResponse(response, onChunk = null) {
   if (!response.ok) {
     const errorText = await response.text().catch(() => '')
     throw new Error(errorText || 'AI 解牌失敗')
   }
 
+  const contentType = response.headers.get('content-type') || ''
+
+  // 相容舊版 Edge Function：回傳 JSON { ok, result }
+  if (contentType.includes('application/json')) {
+    const data = await response.json()
+    if (!data.ok) {
+      throw new Error(data?.error?.message || data?.error || 'AI 解牌失敗')
+    }
+    const result = data.result || '沒有取得解牌結果'
+    if (typeof onChunk === 'function') onChunk(result)
+    return result
+  }
+
+  // 新版 Edge Function：回傳 text/plain stream，邊生成邊顯示
   let aiResult = ''
 
   if (response.body) {
@@ -355,13 +361,22 @@ async function requestSingleReading(payload, targetResultId = null, onChunk = nu
     }
   } else {
     aiResult = await response.text()
-    if (typeof onChunk === 'function') {
-      onChunk(aiResult)
-    }
+    if (typeof onChunk === 'function') onChunk(aiResult)
   }
 
-  aiResult = aiResult.trim() || '沒有取得解牌結果'
+  return aiResult.trim() || '沒有取得解牌結果'
+}
 
+async function requestSingleReading(payload, targetResultId = null, onChunk = null) {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ ...payload, regenerate_reading_id: targetResultId || undefined }),
+  })
+
+  const aiResult = await readAIResponse(response, onChunk)
   let readingId = ''
 
   const existing = targetResultId
@@ -376,25 +391,6 @@ async function requestSingleReading(payload, targetResultId = null, onChunk = nu
 
   return { aiResult, readingId }
 }
-
-  const data = await response.json()
-  if (!response.ok || !data.ok) {
-    throw new Error(data?.error?.message || data?.error || 'AI 解牌失敗')
-  }
-
-  const aiResult = data.result || '沒有取得解牌結果'
-  let readingId = data.reading_id || ''
-
-  const existing = targetResultId ? state.current.generatedReadings.find((item) => item.id === targetResultId) : null
-  if (!readingId && existing?.readingId) {
-    readingId = await updateReadingInSupabase(existing.readingId, aiResult, payload)
-  } else if (!readingId) {
-    readingId = await insertReadingToSupabase(payload, aiResult)
-  }
-
-  return { aiResult, readingId }
-}
-
 
 async function requestAggregateSummary() {
   const payload = buildPayloadFromCurrent()
@@ -435,17 +431,33 @@ ${individualReadingsText}`
       }),
     })
 
-    const data = await response.json()
-    if (!response.ok || !data.ok) {
-      throw new Error(data?.error?.message || data?.error || '統整解讀失敗')
-    }
-
-    const summaryResult = data.result || '沒有取得統整結果'
     const summaryPayload = {
       ...payload,
       spread_type: '整體統整',
       question_type: payload.question_type ? `${payload.question_type}｜整體統整` : '整體統整',
     }
+
+    const tempSummaryId = state.current.aggregateSummary?.id || uid('summary')
+    state.current.aggregateSummary = {
+      id: tempSummaryId,
+      readingId: state.current.aggregateSummary?.readingId || '',
+      result: '',
+      createdAt: state.current.aggregateSummary?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      questionType: summaryPayload.question_type,
+      questionContent: payload.question,
+      cardsSnapshot: structuredClone(payload.cards),
+    }
+
+    const summaryResult = await readAIResponse(response, (partialText) => {
+      state.current.aggregateSummary = {
+        ...state.current.aggregateSummary,
+        result: partialText,
+        updatedAt: new Date().toISOString(),
+      }
+      persistCurrent()
+      render()
+    })
 
     const existingSummaryId = state.current.aggregateSummary?.readingId || ''
     const summaryReadingId = existingSummaryId
